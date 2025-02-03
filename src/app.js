@@ -1,4 +1,7 @@
 import express from "express"; // import express module to create express application
+import cors from "cors"; // import cors module to enable cross-origin resource sharing
+import cookieParser from "cookie-parser"; // import cookie-parser module to parse cookies attached to the client request object
+
 const app = express(); // create an instance of an Express application
 
 //  configuring app to use cors middleware.

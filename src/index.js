@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 8080;
 DB_connect().then(() => {
 
     app.get("/", (req, res) => {
-        res.send("Arshad Faraz ");
+        res.send("  Welcome to the Video Streaming API");
     });
 
 

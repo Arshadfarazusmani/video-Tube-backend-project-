@@ -32,3 +32,11 @@ app.use(express.static('public'));
 app.use(cookieParser());
 
 export  {app}; // export the app object to be used in other modules.
+
+// Routes Import
+
+import UserRouter from './routes/user.routes.js';
+
+// Routes declaration
+
+app.use('/api/v1/users', UserRouter);

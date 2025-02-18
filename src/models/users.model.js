@@ -30,7 +30,7 @@ const UserSchema = new mongoose.Schema(
 
         awatar:{
             type: String, // cloudinary url 
-            required: false,
+            required: true,
             
         },
         coverImage:{
@@ -70,7 +70,7 @@ const UserSchema = new mongoose.Schema(
                return await bcrypt.compare(password, this.password);
            };
 
-           UserSchema.methord.generateAccessToken = function(){
+           UserSchema.methord = function generateAccessToken(){
 
             jwt.sign({
                 id: this._id,

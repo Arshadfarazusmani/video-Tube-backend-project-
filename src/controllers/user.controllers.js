@@ -1,4 +1,8 @@
 import {asynchandler} from '../utils/async-handler.js';
+import {api_error} from '../utils/api-error.js';
+import {User} from '../models/users.model.js';
+import {upploadOncluodinary} from '../utils/cloudinary.js';
+import {api_response}from '../utils/api-response.js';
 
 const registerUser = asynchandler(async (req , res) => {
 //    1 get the user data from the frontend . 
@@ -11,11 +15,63 @@ const registerUser = asynchandler(async (req , res) => {
 //    8 remove password and refresh tokens fields from the  response object
 //    9 check  for user creation and send the response.
 
-res.body()
+const {username,email,fullname,password}=req.body
+
+console.log(username,email,fullname,password);
+
+if(!username || !email || !fullname || !password){
+    throw new api_error(400,"Please fill all the fields");}
+
+    const existedUser = User.findOne({$or:[{username},{email}]});
+
+    if(existedUser){
+        throw new api_error(409,"User already exists");
+
+
+ };
+
+   const avatarlocalpath =  req.files?.avatar[0]?.path;  
+    const coverImagelocalpath =  req.files?.coverImage[0]?.path;
+
+   if(!avatarlocalpath){
+       throw new api_error(400,"Please upload an avatar image");
+   }
+
+
+  const avatar =  await upploadOncluodinary(avatarlocalpath);
+  const coverImage= await upploadOncluodinary(coverImagelocalpath);
+
+  if(!avatar){
+      throw new api_error(400,"Avatar is required"); 
+  }
+
+
+const user=await User.create({
+    username: username.toLowerCase(),
+    email,
+    fullname,
+    password,
+    avatar: avatar.url,
+    coverImage: coverImage?.url||"",
+});
+
+const createduser =await User.findById(user._id).select("-password -refreshToken");
+
+if(!createduser){
+    throw new api_error(500,"User creation failed");
+
+
+
+}
+
+res.status(201).json(new api_response(200,"User created successfully",createduser));
 
 
 
 
 });
+
+
+
 
 export {registerUser};

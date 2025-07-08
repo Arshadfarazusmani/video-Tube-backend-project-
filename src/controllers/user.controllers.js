@@ -22,7 +22,7 @@ console.log(username,email,fullname,password);
 if(!username || !email || !fullname || !password){
     throw new api_error(400,"Please fill all the fields");}
 
-    const existedUser = User.findOne({$or:[{username},{email}]});
+    const existedUser = await User.findOne({$or:[{username},{email}]});
 
     if(existedUser){
         throw new api_error(409,"User already exists");
@@ -52,7 +52,7 @@ const user=await User.create({
     fullname,
     password,
     avatar: avatar.url,
-    coverImage: coverImage?.url||"",
+    coverImage: coverImage?.url||" ",
 });
 
 const createduser =await User.findById(user._id).select("-password -refreshToken");

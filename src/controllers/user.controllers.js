@@ -33,6 +33,12 @@ if(!username || !email || !fullname || !password){
    const avatarlocalpath =  req.files?.avatar[0]?.path;  
     const coverImagelocalpath =  req.files?.coverImage[0]?.path;
 
+//   let coverImageLocalPath;
+
+//     if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+//         coverImageLocalPath = req.files.coverImage[0].path
+//     }
+
    if(!avatarlocalpath){
        throw new api_error(400,"Please upload an avatar image");
    }
@@ -43,6 +49,9 @@ if(!username || !email || !fullname || !password){
 
   if(!avatar){
       throw new api_error(400,"Avatar is required"); 
+  }
+  if(!coverImage){
+      throw new api_error(400,"Cover is required"); 
   }
 
 

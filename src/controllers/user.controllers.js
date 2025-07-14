@@ -4,6 +4,21 @@ import {User} from '../models/users.model.js';
 import {upploadOncluodinary} from '../utils/cloudinary.js';
 import {api_response}from '../utils/api-response.js';
 
+const generateAccessTokenAndRefreshToken = async(user_id)=>{
+
+    const user = await User.findById(user_id)
+    const accessToken= user.generateAccessToken
+    const refreshToken= user.generateRefreshToken
+
+    user.refreshToken=refreshToken ;
+
+    await user.save({validateBeforeSave:false})
+
+    return {accessToken , refreshToken}
+
+};
+ 
+
 const registerUser = asynchandler(async (req , res) => {
 //    1 get the user data from the frontend . 
 //    2 Validation - not empty , valid email , password length , password match
@@ -80,7 +95,102 @@ res.status(201).json(new api_response(200,"User created successfully",createduse
 
 });
 
+const loginUser = asynchandler(async (req , res) => {
+    // req.body -> data 
+    // username or email
+    // find user
+    // check password 
+    // access token refresh token 
+    // send cookie
+
+    const {email,password} = req.body;
+
+    if (!email) {
+        throw new api_error(400,"Email is required");
+    }
+
+    // Find user by email, explicitly select password for comparison
+    const user = await User.findOne({email}).select('+password'); // Ensure password is selected for comparison
+
+    if(!user){
+        throw new api_error(404,"User does not exist or invalid credentials");
+    }
+
+    // Compare the provided password with the stored hashed password
+    const is_password_Valid = await user.comparePassword(password);
+
+    if(!is_password_Valid){
+        throw new api_error(401,"Invalid credentials (incorrect password)");
+    }
+
+    // Generate access and refresh tokens
+    const {accessToken,refreshToken} = await generateAccessTokenAndRefreshToken(user._id);
+
+    // Fetch the logged-in user again, excluding password and refresh token for the response
+    // Use .lean() to get a plain JavaScript object to avoid circular reference errors
+    const loggedIn_User = await User.findById(user._id).select("-password -refreshToken").lean();
+
+    // No need for .toObject() here because .lean() already returns a plain JS object
+    // const plain_js_Object_loggedin_user = loggedIn_User.toObject(); // REMOVED THIS LINE
+
+    const options = {
+        httpOnly: true,
+        secure: false // Set to true in production if using HTTPS
+        // sameSite: 'None' // Consider adding this for cross-site cookie handling if needed
+    };
+
+    // Send cookies and JSON response
+    return res.status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new api_response(
+                200,
+                {
+                    user: loggedIn_User, // Use the plain JavaScript object directly
+                    accessToken,
+                    refreshToken
+                },
+                "User logged in successfully!!"
+            )
+        );
+});
+
+
+const logOutUser=asynchandler(async(req, res )=>{
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: {
+                refreshToken: 1 // this removes the field from document
+            }
+        },
+        {
+            new: true
+        }
+    )
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new api_response(200, {}, "User logged Out"))
 
 
 
-export {registerUser};
+
+});
+
+
+export {
+    registerUser,
+    loginUser,
+    logOutUser
+
+
+};

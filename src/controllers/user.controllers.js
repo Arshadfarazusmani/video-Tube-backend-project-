@@ -5,17 +5,30 @@ import {upploadOncluodinary} from '../utils/cloudinary.js';
 import {api_response}from '../utils/api-response.js';
 
 const generateAccessTokenAndRefreshToken = async(user_id)=>{
+    console.log("Attempting to generate tokens for user_id:", user_id); // Log the ID being used
 
-    const user = await User.findById(user_id)
-    const accessToken= user.generateAccessToken
-    const refreshToken= user.generateRefreshToken
+    const user = await User.findById(user_id); // This is the line that fetches the user
 
-    user.refreshToken=refreshToken ;
+    // --- ADD THIS CHECK ---
+    if (!user) {
+        console.error("ERROR: User not found with ID:", user_id); // Crucial log
+        throw new api_error(404, "User not found for token generation.");
+    }
+    // --- END ADDED CHECK ---
 
-    await user.save({validateBeforeSave:false})
+    console.log("User found:", user.username, user.email); // Confirm user object is retrieved
 
-    return {accessToken , refreshToken}
+    const accessToken= user.generateAccessToken(); // Ensure it's called as a function
+    const refreshToken= user.generateRefreshToken(); // Ensure it's called as a function
 
+    user.refreshToken=refreshToken;
+
+    await user.save({validateBeforeSave:false});
+
+
+    
+
+    return {accessToken , refreshToken};
 };
  
 
@@ -172,7 +185,7 @@ const logOutUser=asynchandler(async(req, res )=>{
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: false
     }
 
     return res

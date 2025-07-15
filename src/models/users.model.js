@@ -70,9 +70,10 @@ const UserSchema = new mongoose.Schema(
                return await bcrypt.compare(password, this.password);
            };
 
-           UserSchema.methord = function generateAccessToken(){
+           
+           UserSchema.methods.generateAccessToken = function(){
 
-            jwt.sign({
+           return jwt.sign({
                 id: this._id,
                 username: this.username,
                 email: this.email,
@@ -83,15 +84,16 @@ const UserSchema = new mongoose.Schema(
 
 
 
-           UserSchema.methord.generateRefreshToken = function(){
+           UserSchema.methods.generateRefreshToken = function(){
             
-            jwt.sign({
+            return jwt.sign({
                 id: this._id,
-                username: this.username,
-                email: this.email,
-                fullname: this.fullname,
-
-           }, process.env.REFRESH_TOKEN_SECRET,{"expiresIn":process.env.REFRESH_TOKEN_EXPIRY});
+                
+           }, process.env.REFRESH_TOKEN_SECRET,
+           
+           {"expiresIn":process.env.REFRESH_TOKEN_EXPIRY});
+           
            };
 
+           
 export const User = mongoose.model("User", UserSchema);
